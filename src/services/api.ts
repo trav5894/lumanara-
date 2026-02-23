@@ -1,6 +1,6 @@
 // API Service for communicating with LUMANARA backend
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE_URL = (process.env.VITE_API_BASE || process.env.REACT_APP_API_URL) || 'http://localhost:10000';
 
 class APIService {
   private token: string | null = null;
@@ -33,9 +33,9 @@ class APIService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(typeof options.headers === 'object' && options.headers !== null ? Object.fromEntries(Object.entries(options.headers).map(([k, v]) => [k, String(v)])) : {}),
     };
 
     if (this.token) {
@@ -63,29 +63,33 @@ class APIService {
     email: string;
     password: string;
   }) {
-    const data = await this.request('/auth/register', {
+    const data = await this.request<Record<string, any>>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
-    this.setToken(data.access_token);
+    // support either `access_token` (original API) or `token` (node backend)
+    const token = data.access_token || data.token;
+    if (token) this.setToken(token);
     return data;
   }
 
   async login(email: string, password: string) {
-    const data = await this.request('/auth/login', {
+    const data = await this.request<Record<string, any>>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
-    this.setToken(data.access_token);
+    const token = data.access_token || data.token;
+    if (token) this.setToken(token);
     return data;
   }
 
   // ============ Posts ============
 
   async createPost(text: string) {
+    // backend expects `content`, but frontend callers pass `text`
     return this.request('/posts', {
       method: 'POST',
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({ content: text }),
     });
   }
 
@@ -150,11 +154,14 @@ class APIService {
   // ============ Messages ============
 
   async sendMessage(toUserId: string, encryptedText: string) {
+    // backend accepts `toId` and `text`; include both shapes for compatibility
     return this.request('/messages', {
       method: 'POST',
       body: JSON.stringify({
         to_user_id: toUserId,
+        toId: toUserId,
         encrypted_text: encryptedText,
+        text: encryptedText,
       }),
     });
   }
