@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lumanara-backend
+    env: docker
+    plan: free
+    dockerfilePath: backend/Dockerfile
+    context: backend
+    envVars:
+      - key: SECRET_KEY
+        scope: run
+        value: your-secret-key-change-in-production
+      - key: DEBUG
+        scope: run
+        value: "False"
+      - key: CORS_ORIGINS
+        scope: run
+        value: https://trav5894.github.io/lumanara-
+
+# This top-level render.yaml instructs Render to build the service using the
+# Dockerfile inside the `backend/` folder. After this is pushed, trigger a
+# Manual Deploy in the Render dashboard for the service to pick up the new
+# configuration and build the Docker image instead of running the Python build.
