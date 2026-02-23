@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: lumanara-backend
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        scope: run
+        value: postgresql://lumanara_user:lumanara_password@localhost/lumanara_db
+      - key: SECRET_KEY
+        scope: run
+        value: your-secret-key-change-in-production
+      - key: DEBUG
+        scope: run
+        value: "False"
+      - key: CORS_ORIGINS
+        scope: run
+        value: https://trav5894.github.io/lumanara-
+
+  - type: pserv
+    name: postgres
+    plan: free
+    ipAllowList: [] # only allow internal connections
