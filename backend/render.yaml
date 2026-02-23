@@ -1,14 +1,11 @@
 services:
   - type: web
     name: lumanara-backend
-    env: python
+    env: docker
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: Dockerfile
+    context: .
     envVars:
-      - key: DATABASE_URL
-        scope: run
-        value: postgresql://lumanara_user:lumanara_password@localhost/lumanara_db
       - key: SECRET_KEY
         scope: run
         value: your-secret-key-change-in-production
@@ -19,7 +16,7 @@ services:
         scope: run
         value: https://trav5894.github.io/lumanara-
 
-  - type: pserv
-    name: postgres
-    plan: free
-    ipAllowList: [] # only allow internal connections
+# Note: This service uses the repository Dockerfile. The previous Python service
+# definition (with a Postgres service) was removed because the current backend
+# uses a lightweight file-backed Node implementation. If you want a managed DB,
+# re-add a Postgres service and update the backend to use it.
